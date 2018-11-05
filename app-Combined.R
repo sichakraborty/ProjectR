@@ -150,6 +150,12 @@ df$People_Involved <- df$Num_Killed + df$Num_injured
 # 
 # df$Participant_Age <- NULL
 
+#Add two new columns for participant status "killed" and "injured" and count the number.
+df$Num_participant_killed<-str_count(df$Participant_Status,"Killed")
+#print(identical(df$Num_Killed,df$Num_participant_killed))
+
+df$Num_participant_injured<-str_count(df$Participant_Status,"Injured")
+#print(identical(df$Num_injured,df$Num_participant_injured))
 
 
 
