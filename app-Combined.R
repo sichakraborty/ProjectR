@@ -160,7 +160,9 @@ df$Num_participant_injured<-str_count(df$Participant_Status,"Injured")
 
 
 
-
-
+df$Location <- NULL
+df$Num_Killed <- NULL
+df$Num_injured <- NULL
+df$Participant_Status <- NULL
 
 
