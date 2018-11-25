@@ -375,11 +375,15 @@ summ_2018_Crimevsguns <- summ_2018_Crimevsguns[,c(2,3,4)]
 dfm <- melt(summ_2018_Crimevsguns, id.vars = "Months")
 crimevsguns <- ggplot(data=dfm, aes(x = Months, y = value, group = variable, colour = variable))+
   geom_line(size=1.5) + geom_point(size=3)
-crimevsguns <- crimevsguns + ggtitle("Number of crimes vs Number of Guns reported in the crimes")
+crimevsguns <- crimevsguns + ggtitle("Number of crimes vs Number of Guns reported")
 crimevsguns <- crimevsguns + ylim(3000, 5500)
-crimevsguns <- crimevsguns + theme(plot.title = element_text(size = 24, face = "bold"))
+crimevsguns <- crimevsguns + theme(plot.title = element_text(size = 15, face = "bold"))
 crimevsguns <- crimevsguns + theme(legend.text = element_text(size = 10))
-crimevsguns <- crimevsguns + theme(legend.title = element_text(size = 15, face = "italic")) 
+crimevsguns <- crimevsguns + theme(legend.title = element_text(size = 12, face = "italic")) 
+
+ggsave(filename = "Number of crimes vs Number of Guns reported.png", plot = crimevsguns, width = 6, height = 4,
+       dpi = 600)
+df <- ungroup(df)
 
 #Q3. WAS THE VIOLENCE COMMITTED AGAINST STRANGERS OR DID THEY KNOW THE VICTIM BEFOREHAND? 
 strangerplot <- ggplot(df, aes(x = Stranger, fill= I("blue") )) +  
@@ -515,7 +519,7 @@ df <- group_by(df, Years)
 summ_stolen_Guns <- summarize(df, Total_Guns=sum(Num_Guns_Involved, na.rm = TRUE), 
                               Stolen_Guns=sum(Stolen_Gun_Count, na.rm = TRUE), 
                               Percentage_Stolen_Guns=Stolen_Guns/Total_Guns)
-#Creating the map
+#Creating the graph
 stolenGuns <- ggplot(data=summ_stolen_Guns, aes(x=Years, y=Percentage_Stolen_Guns, group=1))+
   geom_line(color="blue")+
   geom_point(color="blue")
@@ -532,9 +536,11 @@ df <- ungroup(df)
 
 #States with stolen guns during 2015
 df <- group_by(df, State, Years)
-summ_2015_stolenguns <- summarize(df, Stolen_Guns=sum(Stolen_Gun_Count, na.rm = TRUE), 
-                        Percentage_Stolen_Guns=(Stolen_Guns/sum(summ_2015_stolenguns$Stolen_Guns))*100)
+summ_2015_stolenguns <- summarize(df, Stolen_Guns=sum(Stolen_Gun_Count, na.rm = TRUE))
+#Getting just 2015 information
 summ_2015_stolenguns <- subset(summ_2015_stolenguns, Years == 2015)
+#Creating a column with the percentage of stolen guns
+summ_2015_stolenguns$Percentage_Stolen_Guns <- (summ_2015_stolenguns$Stolen_Guns/sum(summ_2015_stolenguns$Stolen_Guns))*100
 
 #Changind the names to apply state_choropleth
 summ_2015_stolenguns <- change_name(summ_2015_stolenguns, "State", "region")
@@ -555,4 +561,5 @@ stolenGuns2015 <- stolenGuns2015 + theme(legend.title = element_text(size = 15, 
 #Getting the graph in png
 ggsave(filename = "Stolen Guns per State 2015.png", plot = stolenGuns2015, width = 6, height = 4,
        dpi = 600)
+
 df <- ungroup(df)
