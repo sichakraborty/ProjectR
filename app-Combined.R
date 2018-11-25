@@ -7,6 +7,10 @@ library(scales)
 library(gridExtra)
 suppressPackageStartupMessages(library(choroplethr))
 library(choroplethrMaps)
+library(ggplot2)
+library(reshape2)
+library(ggpubr) #install.packages("ggpubr")
+
 
 # Read data
 df <- read.csv("gun-violence-data_01-2013_03-2018.csv", stringsAsFactors = FALSE,
@@ -129,6 +133,143 @@ colorder<- c("Incident_Id","Date", "State","City_or_County","Num_Killed","Num_in
 df<-df[,colorder]
 
 #ANSWERING THE QUESTIONS
+
+#Q1.HOW DOES GUN VIOLENCE VARY ACROSS DIFFERENT STATES OVER THE YEARS?
+#Getting the year in another column
+df$Year <- as.factor(format(as.Date(df$Date, format="%Y-%m-%d"),"%Y"))
+
+#Creating a summary table to get the information of crimes reported during the Years
+df <- group_by(df, State, Year)
+summ11 <- summarize(df, num_crimes = n())
+summ11$State_abb <- summ11$State
+#Create a column for the abbreviation of the States
+summ11$State_abb <- state.abb[match(summ11$State_abb,state.name)] 
+
+#Creating the plot
+g11 <- ggplot(summ11, aes(x = State_abb, y = num_crimes))
+g11 <- g11 + geom_point(aes(color = Year),
+                        alpha = 0.75,
+                        size = 2.5)
+g11 <- g11 + theme(axis.title = element_blank()) 
+g11 <- g11 + theme(axis.ticks.y = element_blank())
+g11 <- g11 + theme(axis.text.x = element_text(size = 4.5))
+g11 <- g11 + theme(axis.text.y = element_text(size = 7))
+g11 <- g11 + theme(legend.text = element_text(size = 7))
+g11 <- g11 + theme(legend.title = element_text(size = 6))
+g11 <- g11 + theme(legend.key.size = unit(0.20, "in"))
+g11 <- g11 + theme(legend.key = element_rect(fill = NA))
+g11 <- g11 + theme(legend.position = c(0.90, 0.75))
+g11
+
+#Getting the plot in png
+ggsave(filename = "g11.png", plot = g11, width = 6, height = 4,
+       dpi = 600)
+df <- ungroup(df)
+
+#Another way to check the data
+df <- group_by(df, State, Year)
+summ1 <- summarize(df, num_crimes = n())
+
+g1 <- qplot(Year, num_crimes, data = summ1, geom = "point", color = State)
+g1 <- g1 + ggtitle("Crimes per Year in the USA")
+g1 <- g1 + theme(plot.title = element_text(face = "bold"))
+g1 <- g1 + theme(axis.ticks = element_blank())
+g1 <- g1 + theme(axis.title = element_blank()) 
+g1 <- g1 + theme(legend.text = element_text(size = 5))
+g1 <- g1 + theme(legend.title = element_text(size = 8))
+g1 <- g1 + theme(legend.key.size = unit(0.10, "in"))
+g1 <- g1 + theme(legend.spacing = unit(0, "in"))
+g1 <- g1 + theme(legend.key = element_rect(fill = NA))
+g1
+#Getting the plot in png
+ggsave(filename = "g1.png", plot = g1, width = 6, height = 4,
+       dpi = 600)
+df <- ungroup(df)
+
+#How does gun violence vary over the years overall
+g1a <- qplot(Year, data = df, geom = "bar", 
+             fill = I("red"),                    
+             color = I("red"))
+g1a <- g1a + ggtitle("Number of Crimes per Year")
+g1a <- g1a + theme(plot.title = element_text(face = "bold"))
+g1a <- g1a + theme(axis.ticks.y = element_blank())
+g1a <- g1a + theme(axis.ticks.x = element_blank())
+g1a <- g1a + theme(axis.title = element_blank()) 
+g1a
+#Getting the plot in png
+ggsave(filename = "g1a.png", plot = g1a, width = 6, height = 4,
+       dpi = 600)
+
+#Creating a summary table to get the information of the crimes of the States
+df <- group_by(df, State)
+summ1b <- summarize(df, num_crimes = n())
+#What are the 10 states with highest crimes
+summ1b <- arrange(summ1b, desc(num_crimes))
+summ1b <- summ1b[1:10, ]
+
+#Creating the plot
+g1b <-ggdotchart(summ1b, x = "State", y = "num_crimes",
+                 color = "State", size = 4,      # Points color and size
+                 add = "segment",              # Add line segments
+                 add.params = list(size = 1.5), 
+                 palette = "jco",
+                 ggtheme = theme_pubclean())
+g1b <- g1b + ggtitle("States with highest Crime")
+g1b <- g1b + theme(plot.title = element_text(face = "bold"))
+g1b <- g1b + theme(axis.title = element_blank()) 
+g1b <- g1b + theme(axis.ticks = element_blank())
+g1b <- g1b + theme(legend.position = "none")
+g1b
+#Getting the plot in png
+ggsave(filename = "g1b.png", plot = g1b, width = 6, height = 4,
+       dpi = 600)
+df <- ungroup(df)
+
+#To narrow up the information, we want to see how do the States in top 6 crimes overall vary through the years
+df <- group_by(df, State, Year)
+summ1c <- summarize(df, num_crimes = n())
+summ1c <- filter(summ1c, State == "Illinois"|State == "California"|State == "Florida"
+                 |State == "Ohio"|State == "Texas"|State == "New York")
+#Creating the plot
+g1c <- ggplot(summ1c, aes(fill= State, y=num_crimes, x=Year)) + 
+  geom_bar( stat="identity", position = "fill")
+g1c <- g1c + ggtitle("Crime distribution in the States with highest Crime")
+g1c <- g1c + theme(plot.title = element_text(face = "bold"))
+g1c <- g1c + theme(axis.title = element_blank()) 
+g1c <- g1c + theme(axis.ticks = element_blank())
+g1c <- g1c + theme(axis.text.y = element_blank())
+g1c <- g1c + theme(panel.background = element_blank())
+g1c
+#Getting the plot in png
+ggsave(filename = "g1c.png", plot = g1c, width = 6, height = 4,
+       dpi = 600)
+df <- ungroup(df)
+
+#For curiosity, Show the 15 cities in the US with highest crime.
+df <- group_by(df, State, City_or_County)
+summ1d <- summarize(df, num_crimes = n())
+summ1d <- arrange(summ1d, desc(num_crimes))
+summ1d <- summ1d[1:15, ]
+summ1d$State_abb <- state.abb[match(summ1d$State,state.name)]
+#Creating the plot
+g1d <- qplot(State_abb, num_crimes, data = summ1d, geom = "point", color = City_or_County)
+g1d <- g1d + ggtitle("Cities with highest Crime")
+g1d <- g1d + theme(plot.title = element_text(face = "bold"))
+g1d <- g1d + theme(axis.ticks = element_blank())
+g1d <- g1d + theme(axis.title = element_blank())
+g1d <- g1d + theme(legend.text = element_text(size = 8))
+g1d <- g1d + theme(legend.title = element_text(size = 10))
+g1d <- g1d + theme(legend.key.size = unit(0.2, "in"))
+g1d <- g1d + theme(legend.key = element_rect(fill = NA))
+g1d <- g1d + geom_point(size= 3.5)
+g1d
+#Getting the plot in png
+ggsave(filename = "g1d.png", plot = g1d, width = 6, height = 4,
+       dpi = 600)
+df <- ungroup(df)
+
+#Delete the column Years I created
+df$Year <- NULL 
 
 #Q2.WHICH STATES HAVE HIGHER AND LOWER NUMBER OF VIOLENCE CASES REPORTED DURING 2018? 
 #Getting the year in another column
