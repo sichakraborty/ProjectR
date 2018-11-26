@@ -9,7 +9,8 @@ suppressPackageStartupMessages(library(choroplethr))
 library(choroplethrMaps)
 library(reshape2)
 library(ggpubr) #install.packages("ggpubr")
-
+library(maps)
+library(rgdal)
 
 # Read data
 df <- read.csv("gun-violence-data_01-2013_03-2018.csv", stringsAsFactors = FALSE,
@@ -519,8 +520,84 @@ pHigh
 ggsave(filename = "Highest_violence_data.png", plot = pHigh, width = 6, height = 4,
        dpi = 600)
 
+#Q5. HOW MANY GUNS WERE INVOLVED IN THE CRIME PER STATE ?
 
-#Q7.HOW MANY STOLEN GUNS WERE INVOLVED IN THE INCIDENTS REPORTED PER STATE ACROSS THE YEARS?
+
+#Creating a map to visualize data over states
+all_states<-map_data("state")
+
+dm<-group_by(df,State)
+dm$Date<-as.Date(dm$Date)
+dm$State<-factor(dm$State)
+summ_gun_per_state<-data.frame(summarise(dm,sum_gun=sum(Num_Guns_Involved)))
+sgps<-summ_gun_per_state
+sgps$State<-tolower(sgps$State)
+
+map.gun<-merge(sgps,all_states,by.x = "State",by.y = "region")
+map.gun<-map.gun[order(map.gun$order),]
+
+mapofgun<-ggplot(map.gun,aes(x=long,y=lat,group=group))+
+  geom_polygon(aes(fill=sum_gun))+
+  geom_path()+
+  scale_fill_gradientn(colours=rev(heat.colors(10)),na.value="grey90")+
+  coord_map()+
+  ggtitle("Number of Guns Involved over States of the US")+
+  theme(plot.title = element_text(size = 18, face = "bold"))+
+  guides(fill=guide_colorbar(title="Number of Guns"))+
+  theme(legend.justification=c(0,0), legend.position=c(0,0))
+
+
+centroids <- setNames(do.call("rbind.data.frame", 
+                              by(map.gun, 
+                                 map.gun$group, 
+                                 function(x) {Polygon(x[c('long', 'lat')])@labpt})), c('long', 'lat')) 
+centroids$label <- map.gun$State[match(rownames(centroids), map.gun$group)]
+
+mapofgun<-mapofgun+with(centroids, annotate(geom="text", x = long, y = lat, label=label, size=2.5))
+
+#Just show 10 states with top number of guns involved
+head(map.gun[order(map.gun$sum_gun),],10)
+min(top_n(summ_gun_per_state,n=10,wt=sum_gun)$sum_gun)
+centroids.selected <- centroids[centroids$label %in% 
+                                  (map.gun[map.gun$sum_gun>min(top_n(summ_gun_per_state,n=10,wt=sum_gun)$sum_gun),]$State),]
+mapofgun<-mapofgun+with(centroids.selected, annotate(geom="text", x = long, y = lat, label=label, size=2.5))
+
+mapofgun<-mapofgun+theme(
+  axis.line = element_blank(), 
+  axis.text.x = element_blank(), 
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(), 
+  axis.title.x = element_blank(), 
+  axis.title.y = element_blank(),
+  legend.text=element_text(size=7),
+  legend.title=element_text(size=8),
+  panel.background = element_blank(),
+  panel.border = element_rect(colour = "gray", fill=NA, size=0.5))
+print(mapofgun)
+
+ggsave(filename = "Map of Num_of_Guns_per_State.png", plot = mapofgun, width = 6, height = 4,
+       dpi = 600)
+
+#Creating scatter bar chart to show the data distribution
+scatterofgun <- qplot(State, sum_gun,data = summ_gun_per_state, geom = "bin2d",
+                      fill = sum_gun,                    
+                      alpha = I(0.5))
+scatterofgun<-scatterofgun+scale_fill_gradient(name = "sum_gun", low = "blue", high = "red")+
+  guides(fill=guide_colorbar(title="Number of Guns"))+
+  xlab("Number of Guns")+
+  ggtitle("Number of Guns Involved per State")+
+  theme(legend.text=element_text(size=7),
+        legend.title=element_text(size=8),
+        plot.title = element_text(size = 18, face = "bold"))
+
+print(scatterofgun)
+
+ggsave(filename = "Scatter of Num_of_Guns_per_State.png", plot = scatterofgun, width = 6, height = 4,
+       dpi = 600)
+
+
+
+#Q6.HOW MANY STOLEN GUNS WERE INVOLVED IN THE INCIDENTS REPORTED PER STATE ACROSS THE YEARS?
 
 #Analyzing the percentage of stolen guns involved across the years
 df <- group_by(df, Years)
@@ -571,3 +648,4 @@ ggsave(filename = "Stolen Guns per State 2015.png", plot = stolenGuns2015, width
        dpi = 600)
 
 df <- ungroup(df)
+
