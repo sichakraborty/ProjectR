@@ -4,10 +4,9 @@ library(stringr)
 library(dplyr)
 suppressPackageStartupMessages(library(ggplot2))
 library(scales)
-library(gridExtra)
+library(gridExtra) #install.packages("gridExtra")
 suppressPackageStartupMessages(library(choroplethr))
 library(choroplethrMaps)
-library(ggplot2)
 library(reshape2)
 library(ggpubr) #install.packages("ggpubr")
 
@@ -53,6 +52,7 @@ names(df)[names(df) == "participant_gender"] <- "Participant_Gender"
 names(df)[names(df) == "participant_relationship"] <- "Participant_Relationship"
 names(df)[names(df) == "participant_status"] <- "Participant_Status"
 names(df)[names(df) == "participant_type"] <- "Participant_Type"
+names(df)[names(df) == "participant_age_group"] <- "Participant_Age_Group"
 
 # Change Data Type
 df$Date <- as.Date(df$Date)
@@ -68,7 +68,7 @@ df<- subset(df, !is.na(Participant_Type))
 df<- subset(df, !is.na(Participant_Status))  
 
 #Remove any row which does not have any participant age group
-df<- subset(df, !is.na(participant_age_group))  
+df<- subset(df, !is.na(Participant_Age_Group))  
 
 # Get latest memory used to store df in megabytes
 print(format(object.size(df), units = "Mb"))
@@ -97,8 +97,8 @@ df$Participant_Type <- NULL
 
 # function to match the relationships
 matchRelationship <- function(input = "") {
-    ifelse(grepl(input, tolower(df$Participant_Relationship), fixed = TRUE), "Yes", "No")
-  }
+  ifelse(grepl(input, tolower(df$Participant_Relationship), fixed = TRUE), "Yes", "No")
+}
 
 df$Acquaintance <- ifelse(
   grepl("family|acquaintance|co-worker|friends|neighbor|significant others", 
@@ -124,17 +124,19 @@ for (i in 1:nrow(df)) {
 # Due to inconsistent Data, drop the following column
 df$Participant_Age <- NULL
 df$Participant_Gender <- NULL
+df$Participant_Age_Group <- NULL
 
 #Reorder the columns
 colnames(df)
 colorder<- c("Incident_Id","Date", "State","City_or_County","Num_Killed","Num_injured","Num_Unharmed","Num_Guns_Involved","Stolen_Gun_Count",
              "Num_Victim","Num_Suspect","People_Involved","Acquaintance","Stranger",
-             "Gang","Mass_Shooting","Not_Reported","participant_age_group")
+             "Gang","Mass_Shooting","Not_Reported")
 df<-df[,colorder]
 
 #ANSWERING THE QUESTIONS
 
 #Q1.HOW DOES GUN VIOLENCE VARY ACROSS DIFFERENT STATES OVER THE YEARS?
+
 #Getting the year in another column
 df$Year <- as.factor(format(as.Date(df$Date, format="%Y-%m-%d"),"%Y"))
 
@@ -268,10 +270,11 @@ ggsave(filename = "g1d.png", plot = g1d, width = 6, height = 4,
        dpi = 600)
 df <- ungroup(df)
 
-#Delete the column Years I created
+#Delete the column Year created
 df$Year <- NULL 
 
 #Q2.WHICH STATES HAVE HIGHER AND LOWER NUMBER OF VIOLENCE CASES REPORTED DURING 2018? 
+
 #Getting the year in another column
 df$Years <- substr(df$Date,1,4)
 df$Years <- factor(df$Years)
@@ -291,7 +294,7 @@ change_name <- function(data, old, new){
   names(data)[names(data) == old] <- new
   return(data)
 }
-#Changind the names to apply state_choropleth
+#Changing the names to apply state_choropleth
 summ_crimes_2018 <- change_name(summ_crimes_2018, "State", "region")
 summ_crimes_2018 <- change_name(summ_crimes_2018, "Total_Crimes", "value")
 
@@ -332,6 +335,7 @@ months2018 <- barplot(summ_2018_months$Total_Crimes, main= "Violence Cases Repor
 df <- ungroup(df)
 
 #Q2.1. WHICH STATE HAS THE MOST AND LEAST REPORTED GUN VIOLENCE THIS YEAR?
+
 df <- group_by(df, State, Years)
 summ_2018_Guns <- summarize(df, Guns_Involved = sum(Num_Guns_Involved))
 summ_2018_Guns <- subset(summ_2018_Guns, Years == 2018)
@@ -358,7 +362,7 @@ ggsave(filename = "Gun Violence 2018.png", plot = q2.1, width = 6, height = 4,
        dpi = 600)
 df <- ungroup(df)
 
-#Comparison 2018 between number of crimes and the number of guns reported 
+#Comparison between number of crimes and the number of guns reported in 2018
 df <- group_by(df, Years, Months)
 summ_2018_Crimevsguns <- summarize(df, Total_Crimes = n(),Guns_Involved = sum(Num_Guns_Involved))
 summ_2018_Crimevsguns <- subset(summ_2018_Crimevsguns, Years == 2018)
@@ -369,6 +373,7 @@ summ_2018_Crimevsguns$Months[summ_2018_Crimevsguns$Months=="03"] <- "3_March"
 summ_2018_Crimevsguns$Months <- factor(summ_2018_Crimevsguns$Months)
 
 #Getting a linear graph
+
 #Eliminating the column "Years" to use melt
 summ_2018_Crimevsguns <- summ_2018_Crimevsguns[,c(2,3,4)]
 #Creating a melting data frame from my summary table "summ_2018_Crimevsguns"
@@ -386,6 +391,7 @@ ggsave(filename = "Number of crimes vs Number of Guns reported.png", plot = crim
 df <- ungroup(df)
 
 #Q3. WAS THE VIOLENCE COMMITTED AGAINST STRANGERS OR DID THEY KNOW THE VICTIM BEFOREHAND? 
+
 strangerplot <- ggplot(df, aes(x = Stranger, fill= I("blue") )) +  
   geom_bar(aes(y = (..count..)/sum(..count..))) + 
   scale_y_continuous(name="Percent of Shootings involving Strangers", labels=scales::percent)+
@@ -417,10 +423,11 @@ Not_Reportedplot
 
 g <- grid.arrange(strangerplot,gangplot,Not_Reportedplot, ncol=3)
 
-ggsave(filename = "Violence_Relationship.pdf", plot = g, width = 6, height = 4,
-       units = "in")
+ggsave(filename = "Violence_Relationship.png", plot = g, width = 6, height = 4,
+       dpi = 600)
 
 #Q4. HOW GRAVE WAS THE VIOLENCE? DID IT RESULT IN DEATH OR INJURY ONLY? 
+
 # Sort the column based on incident date
 df <- arrange(df, Date)
 
@@ -454,8 +461,8 @@ p2
 pTotal <- grid.arrange(p1, p2, nrow=2) #generates combined graph
 
 
-ggsave(filename = "violence_data.pdf", plot = pTotal, width = 6, height = 4,
-       units = "in")
+ggsave(filename = "violence_data.png", plot = pTotal, width = 6, height = 4,
+       dpi = 600)
 
 # Based on peak observed between April to August 2016, we filter the data to create a new df with just those 5 months
 peakData <- subset(df, Date >= "2016-03-01" & Date <= "2016-08-30")
@@ -482,7 +489,7 @@ highData <- subset(peakData, Date >= "2016-06-01" & Date <= "2016-07-10")
 p4 <- ggplot() + 
   geom_line(data = highData, aes(x = Date, y = Num_Killed), color="orange")+ ylab(label='People Killed')+scale_x_date(date_breaks = "1 week" , date_labels = "%d-%b")
 
-p4 <- p4 + ggtitle("Total number of People Involved in Gun Violence between June-July 2016")
+p4 <- p4 + ggtitle("People Involved in Gun Violence between June-July 2016")
 p4 <- p4 + theme(panel.background = element_blank())
 p4 <- p4 + theme(legend.text = element_text(size = 8))
 p4 <- p4 + theme(title = element_text(size = 12))
@@ -509,11 +516,12 @@ p5
 pHigh <- grid.arrange(p4, p5, nrow=2) #generates combined graph
 pHigh
 
-ggsave(filename = "Highest_violence_data.pdf", plot = pHigh, width = 6, height = 4,
-       units = "in")
+ggsave(filename = "Highest_violence_data.png", plot = pHigh, width = 6, height = 4,
+       dpi = 600)
 
 
 #Q7.HOW MANY STOLEN GUNS WERE INVOLVED IN THE INCIDENTS REPORTED PER STATE ACROSS THE YEARS?
+
 #Analyzing the percentage of stolen guns involved across the years
 df <- group_by(df, Years)
 summ_stolen_Guns <- summarize(df, Total_Guns=sum(Num_Guns_Involved, na.rm = TRUE), 
@@ -542,7 +550,7 @@ summ_2015_stolenguns <- subset(summ_2015_stolenguns, Years == 2015)
 #Creating a column with the percentage of stolen guns
 summ_2015_stolenguns$Percentage_Stolen_Guns <- (summ_2015_stolenguns$Stolen_Guns/sum(summ_2015_stolenguns$Stolen_Guns))*100
 
-#Changind the names to apply state_choropleth
+#Changing the names to apply state_choropleth
 summ_2015_stolenguns <- change_name(summ_2015_stolenguns, "State", "region")
 summ_2015_stolenguns <- change_name(summ_2015_stolenguns, "Percentage_Stolen_Guns", "value")
 summ_2015_stolenguns$region <- as.character(summ_2015_stolenguns$region)
