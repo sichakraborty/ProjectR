@@ -140,7 +140,7 @@ df<-df[,colorder]
 #Getting the year in another column
 df$Year <- as.factor(format(as.Date(df$Date, format="%Y-%m-%d"),"%Y"))
 
-#Creating a summary table to get the information of crimes reported during the Years
+#Creating a summary table to get the information of gun related incidents reported during the Years
 df <- group_by(df, State, Year)
 summ11 <- summarize(df, num_crimes = n())
 summ11$State_abb <- summ11$State
@@ -192,7 +192,7 @@ df <- ungroup(df)
 g1a <- qplot(Year, data = df, geom = "bar", 
              fill = I("red"),                    
              color = I("red"))
-g1a <- g1a + ggtitle("Number of Crimes per Year")
+g1a <- g1a + ggtitle("Number of Gun Related Incidents per Year")
 g1a <- g1a + theme(plot.title = element_text(face = "bold"))
 g1a <- g1a + theme(axis.ticks.y = element_blank())
 g1a <- g1a + theme(axis.ticks.x = element_blank())
@@ -202,10 +202,10 @@ g1a
 ggsave(filename = "g1a.png", plot = g1a, width = 6, height = 4,
        dpi = 600)
 
-#Creating a summary table to get the information of the crimes of the States
+#Creating a summary table to get the information of the gun related incidents of the States
 df <- group_by(df, State)
 summ1b <- summarize(df, num_crimes = n())
-#What are the 10 states with highest crimes
+#What are the 10 states with highest incidents
 summ1b <- arrange(summ1b, desc(num_crimes))
 summ1b <- summ1b[1:10, ]
 
@@ -216,7 +216,7 @@ g1b <-ggdotchart(summ1b, x = "State", y = "num_crimes",
                  add.params = list(size = 1.5), 
                  palette = "jco",
                  ggtheme = theme_pubclean())
-g1b <- g1b + ggtitle("States with highest Crime")
+g1b <- g1b + ggtitle("States with highest Gun Related Incidents")
 g1b <- g1b + theme(plot.title = element_text(face = "bold"))
 g1b <- g1b + theme(axis.title = element_blank()) 
 g1b <- g1b + theme(axis.ticks = element_blank())
@@ -235,7 +235,7 @@ summ1c <- filter(summ1c, State == "Illinois"|State == "California"|State == "Flo
 #Creating the plot
 g1c <- ggplot(summ1c, aes(fill= State, y=num_crimes, x=Year)) + 
   geom_bar( stat="identity", position = "fill")
-g1c <- g1c + ggtitle("Crime distribution in the States with highest Crime")
+g1c <- g1c + ggtitle("States with the Highest Gun violence Incidents")
 g1c <- g1c + theme(plot.title = element_text(face = "bold"))
 g1c <- g1c + theme(axis.title = element_blank()) 
 g1c <- g1c + theme(axis.ticks = element_blank())
@@ -255,7 +255,7 @@ summ1d <- summ1d[1:15, ]
 summ1d$State_abb <- state.abb[match(summ1d$State,state.name)]
 #Creating the plot
 g1d <- qplot(State_abb, num_crimes, data = summ1d, geom = "point", color = City_or_County)
-g1d <- g1d + ggtitle("Cities with highest Crime")
+g1d <- g1d + ggtitle("Cities with highest Gun related Incidents")
 g1d <- g1d + theme(plot.title = element_text(face = "bold"))
 g1d <- g1d + theme(axis.ticks = element_blank())
 g1d <- g1d + theme(axis.title = element_blank())
@@ -306,7 +306,7 @@ for(i in 1:nrow(summ_crimes_2018)) {
 }
 
 #Creating the map
-q2 <- state_choropleth(summ_crimes_2018, title = "Number of crimes 2018")
+q2 <- state_choropleth(summ_crimes_2018, title = "Number of gun related incidents in 2018")
 q2 <- q2 + scale_fill_brewer(palette = "OrRd")
 q2 <- q2 + theme(plot.title = element_text(size = 24, face = "bold"))
 q2 <- q2 + theme(legend.text = element_text(size = 10))
@@ -380,13 +380,13 @@ summ_2018_Crimevsguns <- summ_2018_Crimevsguns[,c(2,3,4)]
 dfm <- melt(summ_2018_Crimevsguns, id.vars = "Months")
 crimevsguns <- ggplot(data=dfm, aes(x = Months, y = value, group = variable, colour = variable))+
   geom_line(size=1.5) + geom_point(size=3)
-crimevsguns <- crimevsguns + ggtitle("Number of crimes vs Number of Guns reported")
+crimevsguns <- crimevsguns + ggtitle("Number of Incidents vs Number of Guns reported")
 crimevsguns <- crimevsguns + ylim(3000, 5500)
 crimevsguns <- crimevsguns + theme(plot.title = element_text(size = 15, face = "bold"))
 crimevsguns <- crimevsguns + theme(legend.text = element_text(size = 10))
 crimevsguns <- crimevsguns + theme(legend.title = element_text(size = 12, face = "italic")) 
 
-ggsave(filename = "Number of crimes vs Number of Guns reported.png", plot = crimevsguns, width = 6, height = 4,
+ggsave(filename = "Number of Incidents vs Number of Guns reported.png", plot = crimevsguns, width = 6, height = 4,
        dpi = 600)
 df <- ungroup(df)
 
@@ -622,4 +622,3 @@ ggsave(filename = "Stolen Guns per State 2015.png", plot = stolenGuns2015, width
        dpi = 600)
 
 df <- ungroup(df)
-
