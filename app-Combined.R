@@ -9,8 +9,7 @@ suppressPackageStartupMessages(library(choroplethr))
 library(choroplethrMaps)
 library(reshape2)
 library(ggpubr) #install.packages("ggpubr")
-library(maps)
-library(rgdal)
+
 
 # Read data
 df <- read.csv("gun-violence-data_01-2013_03-2018.csv", stringsAsFactors = FALSE,
