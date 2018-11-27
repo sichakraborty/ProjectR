@@ -152,7 +152,9 @@ g11 <- ggplot(summ11, aes(x = State_abb, y = num_crimes))
 g11 <- g11 + geom_point(aes(color = Year),
                         alpha = 0.75,
                         size = 2.5)
-g11 <- g11 + theme(axis.title = element_blank()) 
+g11 <- g11 + theme(axis.title = element_blank())
+g11 <- g11 + ggtitle("Gun Related Incidents per State across the years")
+g11 <- g11 + theme(plot.title = element_text(face = "bold"))
 g11 <- g11 + theme(axis.ticks.y = element_blank())
 g11 <- g11 + theme(axis.text.x = element_text(size = 4.5))
 g11 <- g11 + theme(axis.text.y = element_text(size = 7))
@@ -308,9 +310,9 @@ for(i in 1:nrow(summ_crimes_2018)) {
 #Creating the map
 q2 <- state_choropleth(summ_crimes_2018, title = "Number of gun related incidents in 2018")
 q2 <- q2 + scale_fill_brewer(palette = "OrRd")
-q2 <- q2 + theme(plot.title = element_text(size = 24, face = "bold"))
+q2 <- q2 + theme(plot.title = element_text(size = 20, face = "bold"))
 q2 <- q2 + theme(legend.text = element_text(size = 10))
-q2 <- q2 + theme(legend.title = element_text(size = 15, face = "italic"))
+q2 <- q2 + theme(legend.title = element_text(size = 0, face = "italic"))
 q2
 
 #Getting the map in png
@@ -355,7 +357,7 @@ q2.1 <- state_choropleth(summ_2018_Guns, title = "Gun Violence 2018")+
   scale_fill_brewer(palette = "RdPu")
 q2.1 <- q2.1 + theme(plot.title = element_text(size = 24, face = "bold"))
 q2.1 <- q2.1 + theme(legend.text = element_text(size = 10))
-q2.1 <- q2.1 + theme(legend.title = element_text(size = 15, face = "italic"))
+q2.1 <- q2.1 + theme(legend.title = element_text(size = 0.0, face = "italic"))
 
 #Getting the map in png
 ggsave(filename = "Gun Violence 2018.png", plot = q2.1, width = 6, height = 4,
@@ -384,7 +386,7 @@ crimevsguns <- crimevsguns + ggtitle("Number of Incidents vs Number of Guns repo
 crimevsguns <- crimevsguns + ylim(3000, 5500)
 crimevsguns <- crimevsguns + theme(plot.title = element_text(size = 15, face = "bold"))
 crimevsguns <- crimevsguns + theme(legend.text = element_text(size = 10))
-crimevsguns <- crimevsguns + theme(legend.title = element_text(size = 12, face = "italic")) 
+crimevsguns <- crimevsguns + theme(legend.title = element_text(size = 0, face = "italic")) 
 
 ggsave(filename = "Number of Incidents vs Number of Guns reported.png", plot = crimevsguns, width = 6, height = 4,
        dpi = 600)
@@ -556,7 +558,7 @@ scatterofgun<-scatterofgun+
   ggtitle("Number of Guns Involved per State")+
   theme(legend.text=element_text(size=7),
         legend.title=element_text(size=8),
-        axis.text.x = element_text(size = 6),
+        axis.text.x = element_text(size = 4.5),
         plot.title = element_text(size = 18, face = "bold"))
 
 print(scatterofgun)
