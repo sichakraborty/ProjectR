@@ -173,7 +173,7 @@ df <- group_by(df, State, Year)
 summ1 <- summarize(df, num_crimes = n())
 
 g1 <- qplot(Year, num_crimes, data = summ1, geom = "point", color = State)
-g1 <- g1 + ggtitle("Crimes per Year in the USA")
+g1 <- g1 + ggtitle("Gun Related Incidents per Year")
 g1 <- g1 + theme(plot.title = element_text(face = "bold"))
 g1 <- g1 + theme(axis.ticks = element_blank())
 g1 <- g1 + theme(axis.title = element_blank()) 
