@@ -523,26 +523,29 @@ ggsave(filename = "Highest_violence_data.png", plot = pHigh, width = 6, height =
 #Q5. HOW MANY GUNS WERE INVOLVED IN THE CRIME PER STATE ?
 
 
-#Creating a map to visualize data over states
-all_states<-map_data("state")
-
+#Summarise the total number of guns involved for each state 
 dm<-group_by(df,State)
 dm$Date<-as.Date(dm$Date)
 dm$State<-factor(dm$State)
 sgps<-data.frame(summarise(dm,sum_gun=sum(Num_Guns_Involved)))
 sgps$State_abb<-sgps$State
-sgps$State_abb <- state.abb[match(sgps$State_abb,state.name)] 
+sgps$State_abb <- state.abb[match(sgps$State_abb,state.name)]
+
+#Creating a map to visualize data over states
 sgps$State<-tolower(sgps$State)
 sgps$State<-as.character(sgps$State)
-
 colnames(sgps)[1]<-"region"
 colnames(sgps)[2]<-"value"
-mapofgun<-state_choropleth(sgps,title = "Number of Guns involved per State",legend = "Numbers of Guns")
+
+mapofgun<-state_choropleth(sgps,title = "Number of Guns involved per State",legend = "Numbers of Guns")+
+  theme(plot.title = element_text(size = 18, face = "bold"))
+
+print(mapofgun)
 
 ggsave(filename = "Map of Num_of_Guns_per_State.png", plot = mapofgun, width = 6, height = 4,
        dpi = 600)
 
-#Creating scatter chart to show the data distribution
+#Creating scatter chart to show the distribution of guns
 scatterofgun <- qplot(State_abb, value,data = sgps, geom = "bin2d",
                       fill =value,alpha = I(0.5))+
   scale_fill_gradient(name = "sum_gun", low = "blue", high = "red")
@@ -563,10 +566,10 @@ ggsave(filename = "Scatter of Num_of_Guns_per_State.png", plot = scatterofgun, w
        dpi = 600)
 
 #Find the top 10 states with most guns involved
-top10guns<-arrange(top_n(sgps,n=10,wt=value),desc(value))
-top10guns<-colnames(top10guns)[1]<-"State"
-top10guns<-colnames(top10guns)[2]<-"Num_of_Guns"
-print(top10guns)
+top10statesw.guns<-arrange(top_n(sgps,n=10,wt=value),desc(value))
+colnames(top10statesw.guns)[1]<-"State"
+colnames(top10statesw.guns)[2]<-"Num_of_Guns"
+print(top10statesw.guns)
 
 
 #Q6.HOW MANY STOLEN GUNS WERE INVOLVED IN THE INCIDENTS REPORTED PER STATE ACROSS THE YEARS?
